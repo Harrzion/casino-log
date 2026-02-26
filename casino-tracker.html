@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Casino Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3a;
+    --gold: #f5c842;
+    --gold-dim: #a88820;
+    --green: #2dce6e;
+    --red: #ff4d6d;
+    --text: #f0f0f5;
+    --text-dim: #7a7a9a;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 52px 24px 24px;
+    background: linear-gradient(180deg, #13131a 0%, transparent 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '🎰';
+    position: absolute;
+    right: -10px;
+    top: 10px;
+    font-size: 110px;
+    opacity: 0.07;
+    transform: rotate(-10deg);
+    pointer-events: none;
+  }
+  .header-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .header-title span { color: var(--gold); }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 0 20px 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .stat-value.positive { color: var(--green); }
+  .stat-value.negative { color: var(--red); }
+  .stat-value.neutral { color: var(--gold); }
+
+  /* ── Add Entry Button ── */
+  .add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 20px 24px;
+    padding: 18px;
+    background: var(--gold);
+    color: #0a0a0f;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: calc(100% - 40px);
+    letter-spacing: 0.3px;
+    box-shadow: 0 8px 32px rgba(245, 200, 66, 0.25);
+  }
+  .add-btn:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(245, 200, 66, 0.2); }
+  .add-btn svg { width: 20px; height: 20px; }
+
+  /* ── Setup Banner ── */
+  .setup-banner {
+    margin: 0 20px 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid #2a3a5e;
+    border-radius: var(--radius);
+    display: none;
+  }
+  .setup-banner.visible { display: block; }
+  .setup-banner h3 { font-size: 13px; color: var(--gold); margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .setup-banner p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .setup-banner a { color: var(--gold); text-decoration: none; }
+
+  /* ── Sheet URL Input ── */
+  .sheet-setup {
+    margin: 0 20px 24px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .sheet-setup label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sheet-setup input {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 10px;
+  }
+  .sheet-setup input:focus { outline: none; border-color: var(--gold); }
+  .save-url-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .save-url-btn:active { background: var(--border); }
+
+  /* ── Section heading ── */
+  .section-heading {
+    padding: 0 20px 12px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── Entry cards ── */
+  .entries-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entry-card.win { border-left: 3px solid var(--green); }
+  .entry-card.loss { border-left: 3px solid var(--red); }
+  .entry-card.push { border-left: 3px solid var(--text-dim); }
+
+  .entry-location {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .entry-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .entry-notes {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-style: italic;
+    grid-column: 1 / -1;
+  }
+  .entry-amount {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+    text-align: right;
+    align-self: start;
+  }
+  .entry-amount.positive { color: var(--green); }
+  .entry-amount.negative { color: var(--red); }
+  .entry-amount.zero { color: var(--text-dim); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .big-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ── Modal Overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 48px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+  .modal-title span { color: var(--gold); }
+
+  /* ── Form ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #1e1e2a;
+  }
+  .form-input::placeholder { color: var(--text-dim); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Live P/L preview */
+  .pl-preview {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pl-preview-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .pl-preview-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+  }
+  .pl-preview-value.positive { color: var(--green); }
+  .pl-preview-value.negative { color: var(--red); }
+  .pl-preview-value.zero { color: var(--text-dim); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--gold);
+    color: #0a0a0f;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .submit-btn:active { transform: scale(0.97); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .cancel-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+  .cancel-btn:active { background: var(--surface2); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(10,10,15,0.3);
+    border-top-color: #0a0a0f;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Config button ── */
+  .config-btn {
+    position: absolute;
+    top: 52px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+  .config-btn:active { background: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-label">Personal Tracker</div>
+  <div class="header-title">Casino<span>Log</span></div>
+  <button class="config-btn" onclick="toggleConfig()" title="Settings">⚙️</button>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-label">All Time</div>
+    <div class="stat-value neutral" id="stat-alltime">$0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Sessions</div>
+    <div class="stat-value neutral" id="stat-sessions">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Win Rate</div>
+    <div class="stat-value neutral" id="stat-winrate">—</div>
+  </div>
+</div>
+
+<!-- Setup / Config Panel -->
+<div class="sheet-setup" id="config-panel" style="display:none;">
+  <label>Google Apps Script URL</label>
+  <input type="url" id="script-url-input" placeholder="Paste your script URL here..." />
+  <button class="save-url-btn" onclick="saveScriptUrl()">💾 Save URL</button>
+</div>
+
+<!-- Setup Banner (shown when no URL saved) -->
+<div class="setup-banner" id="setup-banner">
+  <h3>⚡ Connect to Google Sheets</h3>
+  <p>Tap ⚙️ above and paste your Google Apps Script URL to start logging entries. See the setup instructions file for how to get your URL.</p>
+</div>
+
+<!-- Add Entry Button -->
+<button class="add-btn" onclick="openModal()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+  New Entry
+</button>
+
+<!-- Recent Entries -->
+<div class="section-heading">Recent Entries</div>
+<div class="entries-list" id="entries-list">
+  <div class="empty-state">
+    <span class="big-emoji">🎲</span>
+    <p>No entries yet.<br>Hit <strong>New Entry</strong> to log your first session!</p>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New <span>Entry</span></div>
+
+    <div class="form-group">
+      <label class="form-label">Site / Location *</label>
+      <input class="form-input" id="f-location" type="text" placeholder="e.g. Cimmeron, Yotta Online..." autocomplete="off" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Buy-In ($)</label>
+        <input class="form-input" id="f-buyin" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" oninput="updatePreview()" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Redeemed ($)</label>
+        <input class="form-input" id="f-redeemed" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" oninput="updatePreview()" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Redemption Fee ($) <span style="color:var(--text-dim);font-size:10px;">optional</span></label>
+      <input class="form-input" id="f-fee" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" oninput="updatePreview()" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Game Type <span style="color:var(--text-dim);font-size:10px;">optional</span></label>
+      <input class="form-input" id="f-game" type="text" placeholder="e.g. Slots, Blackjack, Craps..." autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notes <span style="color:var(--text-dim);font-size:10px;">optional</span></label>
+      <input class="form-input" id="f-notes" type="text" placeholder="Who were you with? Any details..." autocomplete="off" />
+    </div>
+
+    <!-- Live P/L Preview -->
+    <div class="pl-preview">
+      <div class="pl-preview-label">Profit / Loss</div>
+      <div class="pl-preview-value zero" id="pl-preview">$0</div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitEntry()">Log Entry</button>
+    <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── State ──
+  let entries = JSON.parse(localStorage.getItem('casinoEntries') || '[]');
+  let scriptUrl = localStorage.getItem('casinoScriptUrl') || '';
+
+  // ── Init ──
+  renderEntries();
+  updateStats();
+  checkSetup();
+
+  function checkSetup() {
+    document.getElementById('setup-banner').classList.toggle('visible', !scriptUrl);
+  }
+
+  function toggleConfig() {
+    const panel = document.getElementById('config-panel');
+    const isVisible = panel.style.display !== 'none';
+    panel.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+      document.getElementById('script-url-input').value = scriptUrl;
+    }
+  }
+
+  function saveScriptUrl() {
+    const val = document.getElementById('script-url-input').value.trim();
+    if (!val) { showToast('Please enter a URL', 'error'); return; }
+    scriptUrl = val;
+    localStorage.setItem('casinoScriptUrl', val);
+    document.getElementById('config-panel').style.display = 'none';
+    checkSetup();
+    showToast('✅ URL saved!', 'success');
+  }
+
+  // ── Modal ──
+  function openModal() {
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('f-location').focus();
+    updatePreview();
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    clearForm();
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  function clearForm() {
+    ['f-location','f-buyin','f-redeemed','f-fee','f-game','f-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    updatePreview();
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = 'Log Entry';
+    btn.disabled = false;
+  }
+
+  // ── Live P/L Preview ──
+  function updatePreview() {
+    const buyin   = parseFloat(document.getElementById('f-buyin').value)   || 0;
+    const redeemed= parseFloat(document.getElementById('f-redeemed').value)|| 0;
+    const fee     = parseFloat(document.getElementById('f-fee').value)     || 0;
+    const pl = redeemed - buyin - fee;
+    const el = document.getElementById('pl-preview');
+    el.textContent = formatMoney(pl);
+    el.className = 'pl-preview-value ' + (pl > 0 ? 'positive' : pl < 0 ? 'negative' : 'zero');
+  }
+
+  // ── Submit ──
+  async function submitEntry() {
+    const location = document.getElementById('f-location').value.trim();
+    if (!location) { showToast('Location is required', 'error'); return; }
+
+    const buyin    = parseFloat(document.getElementById('f-buyin').value)    || 0;
+    const redeemed = parseFloat(document.getElementById('f-redeemed').value) || 0;
+    const fee      = parseFloat(document.getElementById('f-fee').value)      || 0;
+    const game     = document.getElementById('f-game').value.trim();
+    const notes    = document.getElementById('f-notes').value.trim();
+    const pl       = redeemed - buyin - fee;
+    const now      = new Date();
+
+    const entry = {
+      id: Date.now(),
+      date: now.toLocaleDateString('en-US'),
+      time: now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),
+      location, buyin, redeemed, fee, game, notes, pl
+    };
+
+    // Save locally first (always works)
+    entries.unshift(entry);
+    localStorage.setItem('casinoEntries', JSON.stringify(entries));
+    renderEntries();
+    updateStats();
+
+    // Try to send to Google Sheets
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+
+    if (scriptUrl) {
+      btn.innerHTML = '<span class="spinner"></span> Logging...';
+      try {
+        await sendToSheets(entry);
+        closeModal();
+        showToast('✅ Entry logged!', 'success');
+      } catch(e) {
+        closeModal();
+        showToast('⚠️ Saved locally (sheets offline)', 'error');
+      }
+    } else {
+      closeModal();
+      showToast('📱 Saved locally — connect Sheets to sync', '');
+    }
+  }
+
+  async function sendToSheets(entry) {
+    const params = new URLSearchParams({
+      date: entry.date,
+      time: entry.time,
+      location: entry.location,
+      buyin: entry.buyin,
+      redeemed: entry.redeemed,
+      fee: entry.fee,
+      pl: entry.pl,
+      game: entry.game,
+      notes: entry.notes
+    });
+
+    const res = await fetch(`${scriptUrl}?${params}`, { method: 'GET', mode: 'no-cors' });
+    // no-cors means we can't read the response, but the request goes through
+    return true;
+  }
+
+  // ── Render ──
+  function renderEntries() {
+    const list = document.getElementById('entries-list');
+    if (entries.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <span class="big-emoji">🎲</span>
+        <p>No entries yet.<br>Hit <strong>New Entry</strong> to log your first session!</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = entries.slice(0, 30).map(e => {
+      const cls = e.pl > 0 ? 'win' : e.pl < 0 ? 'loss' : 'push';
+      const amtCls = e.pl > 0 ? 'positive' : e.pl < 0 ? 'negative' : 'zero';
+      const meta = [e.date, e.game].filter(Boolean).join(' · ');
+      return `<div class="entry-card ${cls}">
+        <div>
+          <div class="entry-location">${e.location}</div>
+          <div class="entry-meta">${meta}</div>
+          ${e.notes ? `<div class="entry-notes">${e.notes}</div>` : ''}
+        </div>
+        <div class="entry-amount ${amtCls}">${formatMoney(e.pl)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateStats() {
+    const total = entries.reduce((s, e) => s + e.pl, 0);
+    const wins  = entries.filter(e => e.pl > 0).length;
+    const rate  = entries.length > 0 ? Math.round((wins / entries.length) * 100) : null;
+
+    const allEl = document.getElementById('stat-alltime');
+    allEl.textContent = formatMoney(total);
+    allEl.className = 'stat-value ' + (total > 0 ? 'positive' : total < 0 ? 'negative' : 'neutral');
+
+    document.getElementById('stat-sessions').textContent = entries.length;
+    document.getElementById('stat-winrate').textContent = rate !== null ? rate + '%' : '—';
+  }
+
+  // ── Helpers ──
+  function formatMoney(n) {
+    const abs = Math.abs(n);
+    const str = abs.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+    return (n < 0 ? '-' : n > 0 ? '+' : '') + '$' + str;
+  }
+
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => { t.className = 'toast ' + type; }, 3000);
+  }
+</script>
+</body>
+</html>
